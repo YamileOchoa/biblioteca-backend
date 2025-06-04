@@ -448,6 +448,22 @@
                                         "description": "Cover image file",
                                         "type": "string",
                                         "format": "binary"
+                                    },
+                                    "synopsis": {
+                                        "type": "string",
+                                        "example": "Una historia fantástica..."
+                                    },
+                                    "pages": {
+                                        "type": "integer",
+                                        "example": 423
+                                    },
+                                    "publisher": {
+                                        "type": "string",
+                                        "example": "Editorial XYZ"
+                                    },
+                                    "stock": {
+                                        "type": "integer",
+                                        "example": 10
                                     }
                                 },
                                 "type": "object"
@@ -561,6 +577,22 @@
                                         "description": "Cover image file",
                                         "type": "string",
                                         "format": "binary"
+                                    },
+                                    "synopsis": {
+                                        "type": "string",
+                                        "example": "Una historia fantástica..."
+                                    },
+                                    "pages": {
+                                        "type": "integer",
+                                        "example": 423
+                                    },
+                                    "publisher": {
+                                        "type": "string",
+                                        "example": "Editorial XYZ"
+                                    },
+                                    "stock": {
+                                        "type": "integer",
+                                        "example": 10
                                     }
                                 },
                                 "type": "object"
@@ -628,6 +660,95 @@
                         "sanctum": []
                     }
                 ]
+            }
+        },
+        "/api/books/{book}/decrement-stock": {
+            "post": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "Decrement stock of a book",
+                "operationId": "aa1ba1fc4c99700dc49c307ea2611bbf",
+                "parameters": [
+                    {
+                        "name": "book",
+                        "in": "path",
+                        "description": "Book ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "quantity"
+                                ],
+                                "properties": {
+                                    "quantity": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stock decremented",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Book"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Not enough stock"
+                    },
+                    "404": {
+                        "description": "Book not found"
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/books/available": {
+            "get": {
+                "tags": [
+                    "Books"
+                ],
+                "summary": "List books with stock available",
+                "operationId": "d5cf66000c73ee47c7a8d0e5fea9eb9f",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Book"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/categories": {
@@ -845,7 +966,7 @@
                 "tags": [
                     "Loans"
                 ],
-                "summary": "List all loans",
+                "summary": "List all loans (admin) or user's own loans",
                 "operationId": "53fdef403307586122900dc3b1d07368",
                 "responses": {
                     "200": {
@@ -861,13 +982,18 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
                     "Loans"
                 ],
-                "summary": "Create a new loan",
+                "summary": "Create a new loan (admin only)",
                 "operationId": "92bd5c653a9a8345b4f161d5ba3bbd71",
                 "requestBody": {
                     "required": true,
@@ -898,6 +1024,10 @@
                                         "format": "date",
                                         "example": "2025-06-15",
                                         "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "pendiente"
                                     }
                                 },
                                 "type": "object"
@@ -930,27 +1060,35 @@
                 ]
             }
         },
-        "/api/loans/{loan}": {
-            "get": {
+        "/api/loans/request": {
+            "post": {
                 "tags": [
                     "Loans"
                 ],
-                "summary": "Get a loan by ID",
-                "operationId": "39a4e10f305b5be4c3e4eba31a94777a",
-                "parameters": [
-                    {
-                        "name": "loan",
-                        "in": "path",
-                        "description": "Loan ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
+                "summary": "Request a loan (user)",
+                "operationId": "9fa19d579b3afd20ee416b694ada2105",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "book_id"
+                                ],
+                                "properties": {
+                                    "book_id": {
+                                        "type": "integer",
+                                        "example": 11
+                                    }
+                                },
+                                "type": "object"
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
-                    "200": {
-                        "description": "Successful operation",
+                    "201": {
+                        "description": "Solicitud enviada",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -959,22 +1097,148 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Loan not found"
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/loans/{loan}/respond": {
+            "put": {
+                "tags": [
+                    "Loans"
+                ],
+                "summary": "Admin approves or rejects loan request",
+                "operationId": "1264634efcf2659122c9bdb89c22bc32",
+                "parameters": [
+                    {
+                        "name": "loan",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "aprobado",
+                                            "rechazado"
+                                        ],
+                                        "example": "aprobado"
+                                    },
+                                    "loan_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-06-04",
+                                        "nullable": true
+                                    },
+                                    "return_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-06-20",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Respuesta registrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Loan"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/loans/{loan}": {
+            "get": {
+                "tags": [
+                    "Loans"
+                ],
+                "summary": "Get a specific loan",
+                "operationId": "39a4e10f305b5be4c3e4eba31a94777a",
+                "parameters": [
+                    {
+                        "name": "loan",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Loan found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Loan"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             },
             "put": {
                 "tags": [
                     "Loans"
                 ],
-                "summary": "Update a loan",
+                "summary": "Update loan (admin only)",
                 "operationId": "d1a9dfd54e508debb4769bc440e372f8",
                 "parameters": [
                     {
                         "name": "loan",
                         "in": "path",
-                        "description": "Loan ID",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -998,13 +1262,18 @@
                                     "loan_date": {
                                         "type": "string",
                                         "format": "date",
-                                        "example": "2025-06-01"
+                                        "example": "2025-06-01",
+                                        "nullable": true
                                     },
                                     "return_date": {
                                         "type": "string",
                                         "format": "date",
                                         "example": "2025-06-15",
                                         "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "example": "pendiente"
                                     }
                                 },
                                 "type": "object"
@@ -1026,9 +1295,6 @@
                     "403": {
                         "description": "Unauthorized"
                     },
-                    "404": {
-                        "description": "Loan not found"
-                    },
                     "422": {
                         "description": "Validation error"
                     }
@@ -1043,13 +1309,12 @@
                 "tags": [
                     "Loans"
                 ],
-                "summary": "Delete a loan",
+                "summary": "Delete loan (admin only)",
                 "operationId": "6d80bd9e85d71ce0f714269e753f85fb",
                 "parameters": [
                     {
                         "name": "loan",
                         "in": "path",
-                        "description": "Loan ID",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1064,7 +1329,7 @@
                         "description": "Unauthorized"
                     },
                     "404": {
-                        "description": "Loan not found"
+                        "description": "Not found"
                     }
                 },
                 "security": [
@@ -1077,6 +1342,74 @@
     },
     "components": {
         "schemas": {
+            "Book": {
+                "title": "Book",
+                "required": [
+                    "id",
+                    "title",
+                    "isbn",
+                    "year",
+                    "author_id",
+                    "category_id"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "El señor de los anillos"
+                    },
+                    "isbn": {
+                        "type": "string",
+                        "example": "9788478884453"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "example": 1954
+                    },
+                    "author_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "category_id": {
+                        "type": "integer",
+                        "example": 3
+                    },
+                    "cover_image": {
+                        "type": "string",
+                        "example": "covers/imagen.jpg",
+                        "nullable": true
+                    },
+                    "cover_image_url": {
+                        "type": "string",
+                        "example": "http://tu-dominio/storage/covers/imagen.jpg",
+                        "nullable": true
+                    },
+                    "synopsis": {
+                        "type": "string",
+                        "example": "Una historia fantástica...",
+                        "nullable": true
+                    },
+                    "pages": {
+                        "type": "integer",
+                        "example": 423,
+                        "nullable": true
+                    },
+                    "publisher": {
+                        "type": "string",
+                        "example": "Editorial XYZ",
+                        "nullable": true
+                    },
+                    "stock": {
+                        "type": "integer",
+                        "example": 10,
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
             "Category": {
                 "title": "Category",
                 "required": [
@@ -1106,7 +1439,7 @@
                     "id",
                     "user_id",
                     "book_id",
-                    "loan_date"
+                    "status"
                 ],
                 "properties": {
                     "id": {
@@ -1124,61 +1457,24 @@
                     "loan_date": {
                         "type": "string",
                         "format": "date",
-                        "example": "2025-06-01"
+                        "example": "2025-06-01",
+                        "nullable": true
                     },
                     "return_date": {
                         "type": "string",
                         "format": "date",
                         "example": "2025-06-15",
                         "nullable": true
-                    }
-                },
-                "type": "object"
-            },
-            "Book": {
-                "title": "Book",
-                "required": [
-                    "id",
-                    "title",
-                    "isbn"
-                ],
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
                     },
-                    "title": {
+                    "status": {
                         "type": "string",
-                        "example": "El Señor de los Anillos"
+                        "example": "pendiente"
                     },
-                    "isbn": {
+                    "admin_response_at": {
                         "type": "string",
-                        "example": "978-3-16-148410-0"
-                    },
-                    "year": {
-                        "type": "integer",
-                        "example": 1954
-                    },
-                    "author_id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "category_id": {
-                        "type": "integer",
-                        "example": 2
-                    },
-                    "cover_image": {
-                        "type": "string",
-                        "example": "covers/lotr.jpg",
+                        "format": "date-time",
+                        "example": "2025-06-04T12:00:00Z",
                         "nullable": true
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "format": "date-time"
                     }
                 },
                 "type": "object"

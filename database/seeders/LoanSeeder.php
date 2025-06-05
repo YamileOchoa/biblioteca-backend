@@ -15,9 +15,6 @@ class LoanSeeder extends Seeder
             'book_id' => 1,
             'status' => 'pendiente',
             'loan_date' => Carbon::now(),
-            // agrega aquí otros campos obligatorios según tu migración
         ]);
-
-        // Puedes crear más loans aquí si quieres
     }
 }

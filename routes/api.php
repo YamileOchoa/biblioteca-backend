@@ -19,11 +19,11 @@ Route::get('/books/available', [BookController::class, 'available']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Ruta para que un usuario solicite un préstamo (status = pendiente)
-    Route::post('/loans/request', [LoanController::class, 'requestLoan']);
+    //Para que usuario pueda hacer el prestamos
+    Route::post('/loans', [LoanController::class, 'store']);
 
-    // Ruta para que el admin responda (aprueba o rechaza)
-    Route::middleware(IsAdmin::class)->put('/loans/{loan}/respond', [LoanController::class, 'respondToLoan']);
+    Route::post('/loans/{loan}/mark-returned', [LoanController::class, 'markAsReturned']);
+
 
     // Lectura permitida para todos los usuarios autenticados
     Route::get('/books', [BookController::class, 'index']);
@@ -59,7 +59,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/authors/{author}', [AuthorController::class, 'destroy']);
 
         // Loans
-        Route::post('/loans', [LoanController::class, 'store']);
         Route::put('/loans/{loan}', [LoanController::class, 'update']);
         Route::delete('/loans/{loan}', [LoanController::class, 'destroy']);
     });

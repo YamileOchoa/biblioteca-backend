@@ -20,4 +20,21 @@ class Book extends Model
     public function category() {
         return $this->belongsTo(Category::class);
     }
+
+    public function disminuirStock()
+    
+    {
+    if ($this->stock <= 0) {
+        throw new \Exception('El libro no está disponible (sin stock).');
+    }
+
+    $this->stock -= 1;
+    $this->save();
+    }
+
+    public function incrementarStock()
+    {
+    $this->stock += 1;
+    $this->save();
+    }
 }

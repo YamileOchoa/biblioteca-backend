@@ -232,58 +232,6 @@ class BookController extends Controller
         return response()->json(null, 204);
     }
 
-    /**
- * @OA\Post(
- *     path="/api/books/{book}/decrement-stock",
- *     summary="Decrement stock of a book",
- *     tags={"Books"},
- *     security={{"sanctum":{}}},
- *     @OA\Parameter(
- *         name="book",
- *         in="path",
- *         description="Book ID",
- *         required=true,
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\JsonContent(
- *             required={"quantity"},
- *             @OA\Property(property="quantity", type="integer", example=1)
- *         )
- *     ),
- *     @OA\Response(response=200, description="Stock decremented", @OA\JsonContent(ref="#/components/schemas/Book")),
- *     @OA\Response(response=400, description="Not enough stock"),
- *     @OA\Response(response=404, description="Book not found"),
- *     @OA\Response(response=403, description="Unauthorized")
- * )
- */
-public function decrementStock(Request $request, Book $book)
-{
-    if (!Auth::check() || Auth::user()->role !== 'admin') {
-        return response()->json(['message' => 'Unauthorized'], 403);
-    }
-
-    $request->validate([
-        'quantity' => 'required|integer|min:1'
-    ]);
-
-    $quantity = $request->input('quantity');
-
-    if ($book->stock === null || $book->stock < $quantity) {
-        return response()->json(['message' => 'Not enough stock'], 400);
-    }
-
-    $book->stock -= $quantity;
-    $book->save();
-
-    if ($book->cover_image) {
-        $book->cover_image_url = asset('storage/' . $book->cover_image);
-    }
-
-    return response()->json($book);
-}
-
 /**
  * @OA\Get(
  *     path="/api/books/available",

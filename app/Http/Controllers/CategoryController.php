@@ -147,7 +147,7 @@ class CategoryController extends Controller
         if (!Auth::check() || Auth::user()->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-        
+
         $category->delete();
         return response()->noContent();
     }

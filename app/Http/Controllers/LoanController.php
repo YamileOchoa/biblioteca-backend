@@ -78,8 +78,9 @@ class LoanController extends Controller
             'book_id' => 'required|exists:books,id',
         ]);
 
+        // Validar si ya tiene prestamo activo o pendiente sin devolver
         $tienePrestamoActivo = Loan::where('user_id', $user->id)
-            ->where('status', 'aprobado')
+            ->whereIn('status', ['pendiente', 'aprobado'])
             ->whereNull('return_date')
             ->exists();
 
@@ -99,11 +100,12 @@ class LoanController extends Controller
             ], 403);
         }
 
-        $loan = Loan::create([
+        $loan = Loan::create([ 
             'user_id' => $user->id,
             'book_id' => $book->id,
             'loan_date' => now(),
-            'return_date' => now()->addDays(15),
+            'due_date' => now()->addDays(15),
+            'return_date' => null, 
             'status' => 'aprobado',
         ]);
 
@@ -112,6 +114,7 @@ class LoanController extends Controller
             'loan' => $loan
         ], 201);
     }
+
 
     /**
      * @OA\Get(
@@ -178,6 +181,7 @@ class LoanController extends Controller
             'user_id' => 'sometimes|exists:users,id',
             'book_id' => 'sometimes|exists:books,id',
             'loan_date' => 'sometimes|date',
+            'due_date' => 'sometimes|date',
             'return_date' => 'sometimes|date',
             'status' => 'sometimes|string',
         ]);
@@ -221,50 +225,49 @@ class LoanController extends Controller
     }
 
     /**
- * @OA\Post(
- *     path="/api/loans/{loan}/mark-returned",
- *     summary="Marcar préstamo como devuelto (solo admin)",
- *     tags={"Loans"},
- *     security={{"sanctum":{}}},
- *     @OA\Parameter(
- *         name="loan",
- *         in="path",
- *         required=true,
- *         @OA\Schema(type="integer")
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Préstamo marcado como devuelto",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Préstamo marcado como devuelto."),
- *             @OA\Property(property="loan", ref="#/components/schemas/Loan")
- *         )
- *     ),
- *     @OA\Response(response=403, description="No autorizado"),
- *     @OA\Response(response=400, description="Ya fue devuelto")
- * )
- */
-public function markAsReturned(Loan $loan)
-{
-    $user = Auth::user();
+     * @OA\Post(
+     *     path="/api/loans/{id}/return",
+     *     summary="Marcar préstamo como devuelto (solo admin)",
+     *     tags={"Loans"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID del préstamo",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Préstamo marcado como devuelto",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Préstamo marcado como devuelto.")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="No autorizado"),
+     *     @OA\Response(response=404, description="Préstamo no encontrado o ya devuelto")
+     * )
+     */
+    public function markAsReturned($id)
+    {
+        $user = Auth::user();
 
-    if ($user->role !== 'admin') {
-        return response()->json(['message' => 'No autorizado'], 403);
+        if ($user->role !== 'admin') {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $loan = Loan::with('book')->find($id);
+
+        if (!$loan || $loan->return_date) {
+            return response()->json(['message' => 'Préstamo no encontrado o ya devuelto'], 404);
+        }
+
+        $loan->return_date = now();
+        $loan->save();
+
+        // Cuando devuelce se aumenta el stock
+        $loan->book->incrementarStock();
+
+        return response()->json(['message' => 'Préstamo marcado como devuelto.']);
     }
-
-    if ($loan->return_date !== null) {
-        return response()->json(['message' => 'Este préstamo ya fue devuelto.'], 400);
-    }
-
-    $loan->return_date = now();
-    $loan->save();
-
-    $loan->book->incrementarStock();
-
-    return response()->json([
-        'message' => 'Préstamo marcado como devuelto.',
-        'loan' => $loan
-    ]);
-}
-
 }

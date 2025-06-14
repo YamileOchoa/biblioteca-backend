@@ -13,28 +13,30 @@ class Book extends Model
     use HasFactory;
     protected $fillable = ['title', 'isbn', 'year', 'author_id', 'category_id', 'synopsis', 'pages', 'publisher', 'stock', 'cover_image'];
 
-    public function author() {
+    public function author()
+    {
         return $this->belongsTo(Author::class);
     }
 
-    public function category() {
+    public function category()
+    {
         return $this->belongsTo(Category::class);
     }
 
     public function disminuirStock()
-    
-    {
-    if ($this->stock <= 0) {
-        throw new \Exception('El libro no está disponible (sin stock).');
-    }
 
-    $this->stock -= 1;
-    $this->save();
+    {
+        if ($this->stock <= 0) {
+            throw new \Exception('El libro no está disponible (sin stock)');
+        }
+
+        $this->stock -= 1;
+        $this->save();
     }
 
     public function incrementarStock()
     {
-    $this->stock += 1;
-    $this->save();
+        $this->stock += 1;
+        $this->save();
     }
 }

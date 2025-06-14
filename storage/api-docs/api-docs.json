@@ -1134,17 +1134,18 @@
                 ]
             }
         },
-        "/api/loans/{loan}/mark-returned": {
+        "/api/loans/{id}/return": {
             "post": {
                 "tags": [
                     "Loans"
                 ],
                 "summary": "Marcar préstamo como devuelto (solo admin)",
-                "operationId": "c6ef7e2503b7579c30a3fc4cf8aa2518",
+                "operationId": "0531830e393b1b9b492e67a2106b7b31",
                 "parameters": [
                     {
-                        "name": "loan",
+                        "name": "id",
                         "in": "path",
+                        "description": "ID del préstamo",
                         "required": true,
                         "schema": {
                             "type": "integer"
@@ -1161,9 +1162,6 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Préstamo marcado como devuelto."
-                                        },
-                                        "loan": {
-                                            "$ref": "#/components/schemas/Loan"
                                         }
                                     },
                                     "type": "object"
@@ -1174,8 +1172,8 @@
                     "403": {
                         "description": "No autorizado"
                     },
-                    "400": {
-                        "description": "Ya fue devuelto"
+                    "404": {
+                        "description": "Préstamo no encontrado o ya devuelto"
                     }
                 },
                 "security": [

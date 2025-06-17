@@ -11,20 +11,20 @@
 ## 🏗️ Arquitectura del Proyecto
 biblioteca-api/
 ├── app/
-│ ├── Http/
-│ │ └── Controllers/ # Controladores de la API
-│ ├── Models/ # Modelos Eloquent (User, Book, Loan, etc.)
-│ └── ...
-├── config/ # Configuración de Laravel y paquetes
+│   ├── Http/
+│   │   └── Controllers/        # Controladores de la API
+│   ├── Models/                 # Modelos Eloquent (User, Book, Loan, etc.)
+│   └── ...
+├── config/                     # Configuración de Laravel y paquetes
 ├── database/
-│ ├── migrations/ # Migraciones de base de datos
-│ ├── seeders/ # Seeders para datos iniciales
-│ └── ...
-├── public/ # Archivos públicos (portadas, etc.)
+│   ├── migrations/             # Migraciones de base de datos
+│   ├── seeders/                # Seeders para datos iniciales
+│   └── ...
+├── public/                     # Archivos públicos (portadas, etc.)
 ├── routes/
-│ └── api.php # Rutas de la API
-├── storage/ # Archivos generados y logs
-├── .env # Variables de entorno (NO subir a GitHub)
+│   └── api.php                 # Rutas de la API
+├── storage/                    # Archivos generados y logs
+├── .env                        # Variables de entorno (NO subir a GitHub)
 └── ...
 
 ## 🛡️ Autenticación

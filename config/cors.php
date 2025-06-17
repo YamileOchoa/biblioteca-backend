@@ -5,7 +5,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://tu-dominio-frontend.com',
+        'http://localhost:5173', //cambia a tu dominio de front
     ],
 
     'allowed_origins_patterns' => [],

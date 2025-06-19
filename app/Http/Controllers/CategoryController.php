@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\CategoryService;
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 
 /**
  * @OA\Schema(
@@ -19,6 +22,14 @@ use Illuminate\Support\Facades\Auth;
  */
 class CategoryController extends Controller
 {
+    protected $service;
+
+    public function __construct(CategoryService $service)
+    {
+        $this->service = $service;
+    }
+
+
     /**
      * @OA\Get(
      *     path="/api/categories",
@@ -33,7 +44,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        return Category::all();
+        return $this->service->list();
     }
 
     /**
@@ -55,16 +66,12 @@ class CategoryController extends Controller
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-
-        return Category::create($request->validate([
-            'name' => 'required|string',
-            'description' => 'nullable|string',
-        ]));
+        return $this->service->create($request->validated());
     }
 
     /**
@@ -114,14 +121,13 @@ class CategoryController extends Controller
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
-    public function update(Request $request, Category $category)
+    public function update(UpdateCategoryRequest $request, Category $category)
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $category->update($request->all());
-        return $category;
+        return $this->service->update($category, $request->validated());
     }
 
     /**

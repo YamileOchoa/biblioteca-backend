@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\AddFavoriteRequest;
+use App\Services\FavoriteService;
 
 /**
  * @OA\Tag(
@@ -13,6 +15,13 @@ use Illuminate\Support\Facades\Auth;
  */
 class FavoriteController extends Controller
 {
+    protected $service;
+
+    public function __construct(FavoriteService $service)
+    {
+        $this->service = $service;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/favorites",
@@ -30,7 +39,7 @@ class FavoriteController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return $user->favoriteBooks()->get();
+        return $this->service->listFavorites($user);
     }
 
     /**
@@ -57,11 +66,10 @@ class FavoriteController extends Controller
      *     @OA\Response(response=422, description="Invalid data")
      * )
      */
-    public function store(Request $request)
+    public function store(AddFavoriteRequest $request)
     {
         $user = Auth::user();
-        $request->validate(['book_id' => 'required|exists:books,id']);
-        $user->favoriteBooks()->syncWithoutDetaching([$request->book_id]);
+        $this->service->addToFavorites($user, $request->book_id);
         return response()->json(['message' => 'Book added to favorites']);
     }
 
@@ -91,7 +99,7 @@ class FavoriteController extends Controller
     public function destroy($book_id)
     {
         $user = Auth::user();
-        $user->favoriteBooks()->detach($book_id);
+        $this->service->removeFromFavorites($user, $book_id);
         return response()->json(['message' => 'Book removed from favorites']);
     }
 }

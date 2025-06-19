@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Author;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreAuthorRequest;
+use App\Http\Requests\UpdateAuthorRequest;
+use App\Services\AuthorService;
 use Illuminate\Support\Facades\Auth;
 
 class AuthorController extends Controller
@@ -48,19 +51,10 @@ class AuthorController extends Controller
      *     @OA\Response(response=403, description="Unauthorized")
      * )
      */
-    public function store(Request $request)
+    public function store(StoreAuthorRequest $request, AuthorService $service)
     {
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        $validated = $request->validate([
-            'name' => 'required|string',
-            'country' => 'nullable|string',
-            'bio' => 'nullable|string',
-        ]);
-
-        return Author::create($validated);
+        $this->authorizeAdmin();
+        return $service->create($request->validated());
     }
 
     /**
@@ -118,14 +112,10 @@ class AuthorController extends Controller
      *     @OA\Response(response=404, description="Author not found")
      * )
      */
-    public function update(Request $request, Author $author)
+    public function update(UpdateAuthorRequest $request, Author $author, AuthorService $service)
     {
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
-        $author->update($request->all());
-        return $author;
+        $this->authorizeAdmin();
+        return $service->update($author, $request->validated());
     }
 
     /**
@@ -146,13 +136,16 @@ class AuthorController extends Controller
      *     @OA\Response(response=404, description="Author not found")
      * )
      */
-    public function destroy(Author $author)
+    public function destroy(Author $author, AuthorService $service)
+    {
+        $this->authorizeAdmin();
+        $service->delete($author);
+        return response()->noContent();
+    }
+    private function authorizeAdmin(): void
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            abort(403, 'Unauthorized');
         }
-
-        $author->delete();
-        return response()->noContent();
     }
 }

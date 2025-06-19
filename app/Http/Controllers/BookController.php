@@ -6,6 +6,10 @@ use App\Models\Book;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Services\BookService;
+use App\Http\Requests\StoreBookRequest;
+use App\Http\Requests\UpdateBookRequest;
+
 
 /**
  * @OA\Schema(
@@ -29,6 +33,13 @@ use Illuminate\Support\Facades\Storage;
  */
 class BookController extends Controller
 {
+    protected $bookService;
+
+    public function __construct(BookService $bookService)
+    {
+        $this->bookService = $bookService;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/books",
@@ -43,12 +54,7 @@ class BookController extends Controller
      */
     public function index()
     {
-        return Book::with(['author', 'category'])->get()->map(function ($book) {
-            if ($book->cover_image) {
-                $book->cover_image_url = asset('storage/' . $book->cover_image);
-            }
-            return $book;
-        });
+        return $this->bookService->list();
     }
 
     /**
@@ -78,33 +84,13 @@ class BookController extends Controller
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
-    public function store(Request $request)
+    public function store(StoreBookRequest $request)
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $request->validate([
-            'title' => 'required|string',
-            'isbn' => 'required|string|unique:books',
-            'year' => 'required|integer',
-            'author_id' => 'required|exists:authors,id',
-            'category_id' => 'required|exists:categories,id',
-            'cover_image' => 'nullable|image|max:2048',
-            'synopsis' => 'nullable|string',
-            'pages' => 'nullable|integer',
-            'publisher' => 'nullable|string',
-            'stock' => 'nullable|integer|min:0',
-        ]);
-
-        $data = $request->only(['title', 'isbn', 'year', 'author_id', 'category_id', 'synopsis', 'pages', 'publisher', 'stock']);
-
-        if ($request->hasFile('cover_image')) {
-            $path = $request->file('cover_image')->store('covers', 'public');
-            $data['cover_image'] = $path;
-        }
-
-        $book = Book::create($data);
+        $book = $this->bookService->create($request->validated(), $request->file('cover_image'));
         return response()->json($book, 201);
     }
 
@@ -126,11 +112,7 @@ class BookController extends Controller
      */
     public function show(Book $book)
     {
-        $book->load(['author', 'category']);
-        if ($book->cover_image) {
-            $book->cover_image_url = asset('storage/' . $book->cover_image);
-        }
-        return $book;
+        return $this->bookService->get($book);
     }
 
     /**
@@ -167,36 +149,13 @@ class BookController extends Controller
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
-    public function update(Request $request, Book $book)
+    public function update(UpdateBookRequest $request, Book $book)
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $request->validate([
-            'title' => 'sometimes|string',
-            'isbn' => 'sometimes|string|unique:books,isbn,' . $book->id,
-            'year' => 'sometimes|integer',
-            'author_id' => 'sometimes|exists:authors,id',
-            'category_id' => 'sometimes|exists:categories,id',
-            'cover_image' => 'nullable|image|max:2048',
-            'synopsis' => 'nullable|string',
-            'pages' => 'nullable|integer',
-            'publisher' => 'nullable|string',
-            'stock' => 'nullable|integer|min:0',
-        ]);
-
-        $data = $request->only(['title', 'isbn', 'year', 'author_id', 'category_id', 'synopsis', 'pages', 'publisher', 'stock']);
-
-        if ($request->hasFile('cover_image')) {
-            if ($book->cover_image) {
-                Storage::disk('public')->delete($book->cover_image);
-            }
-            $path = $request->file('cover_image')->store('covers', 'public');
-            $data['cover_image'] = $path;
-        }
-
-        $book->update($data);
+        $book = $this->bookService->update($book, $request->validated(), $request->file('cover_image'));
         return response()->json($book);
     }
 
@@ -224,11 +183,7 @@ class BookController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        if ($book->cover_image) {
-            Storage::disk('public')->delete($book->cover_image);
-        }
-
-        $book->delete();
+        $this->bookService->delete($book);
         return response()->json(null, 204);
     }
 
@@ -244,16 +199,8 @@ class BookController extends Controller
  *     )
  * )
  */
-public function available()
-{
-    $books = Book::where('stock', '>', 0)->with(['author', 'category'])->get()->map(function ($book) {
-        if ($book->cover_image) {
-            $book->cover_image_url = asset('storage/' . $book->cover_image);
-        }
-        return $book;
-    });
-
-    return response()->json($books);
-}
-
+   public function available()
+    {
+        return response()->json($this->bookService->available());
+    }
 }

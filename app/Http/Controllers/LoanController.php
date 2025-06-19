@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Loan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\StoreLoanRequest;
+use App\Http\Requests\UpdateLoanRequest;
+use App\Services\LoanService;
 
 /**
  * @OA\Schema(
@@ -22,6 +25,13 @@ use Illuminate\Support\Facades\Auth;
  */
 class LoanController extends Controller
 {
+    protected $service;
+
+    public function __construct(LoanService $service)
+    {
+        $this->service = $service;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/loans",
@@ -38,11 +48,7 @@ class LoanController extends Controller
     public function index()
     {
         $user = Auth::user();
-        if ($user->role === 'admin') {
-            return Loan::with(['user', 'book'])->get();
-        }
-
-        return Loan::with('book')->where('user_id', $user->id)->get();
+        return $this->service->listLoansForUser($user);
     }
 
     /**
@@ -70,49 +76,20 @@ class LoanController extends Controller
      *     @OA\Response(response=401, description="No autenticado")
      * )
      */
-    public function store(Request $request)
+    public function store(StoreLoanRequest $request)
     {
         $user = Auth::user();
 
-        $validated = $request->validate([
-            'book_id' => 'required|exists:books,id',
-        ]);
-
-        // Validar si ya tiene prestamo activo o pendiente sin devolver
-        $tienePrestamoActivo = Loan::where('user_id', $user->id)
-            ->whereIn('status', ['pendiente', 'aprobado'])
-            ->whereNull('return_date')
-            ->exists();
-
-        if ($tienePrestamoActivo) {
-            return response()->json([
-                'message' => 'No puedes solicitar un nuevo préstamo hasta devolver el anterior.'
-            ], 403);
-        }
-
-        $book = \App\Models\Book::find($validated['book_id']);
-
         try {
-            $book->disminuirStock();
-        } catch (\Exception $e) {
+            $loan = $this->service->createLoan($user, $request->validated());
+
             return response()->json([
-                'message' => $e->getMessage()
-            ], 403);
+                'message' => 'Préstamo aprobado automáticamente.',
+                'loan' => $loan
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
         }
-
-        $loan = Loan::create([ 
-            'user_id' => $user->id,
-            'book_id' => $book->id,
-            'loan_date' => now(),
-            'due_date' => now()->addDays(15),
-            'return_date' => null, 
-            'status' => 'aprobado',
-        ]);
-
-        return response()->json([
-            'message' => 'Préstamo aprobado automáticamente.',
-            'loan' => $loan
-        ], 201);
     }
 
 
@@ -171,26 +148,17 @@ class LoanController extends Controller
      *     @OA\Response(response=422, description="Error de validación")
      * )
      */
-    public function update(Request $request, Loan $loan)
+     public function update(UpdateLoanRequest $request, Loan $loan)
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $validated = $request->validate([
-            'user_id' => 'sometimes|exists:users,id',
-            'book_id' => 'sometimes|exists:books,id',
-            'loan_date' => 'sometimes|date',
-            'due_date' => 'sometimes|date',
-            'return_date' => 'sometimes|date',
-            'status' => 'sometimes|string',
-        ]);
-
         $wasReturned = $loan->return_date !== null;
 
-        $loan->update($validated);
+        $loan->update($request->validated());
 
-        if (!$wasReturned && isset($validated['return_date'])) {
+        if (!$wasReturned && $request->filled('return_date')) {
             $loan->book->incrementarStock();
         }
 
@@ -251,22 +219,20 @@ class LoanController extends Controller
     public function markAsReturned($id)
     {
         $user = Auth::user();
-
         if ($user->role !== 'admin') {
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-        $loan = Loan::with('book')->find($id);
-
-        if (!$loan || $loan->return_date) {
-            return response()->json(['message' => 'Préstamo no encontrado o ya devuelto'], 404);
+        $loan = Loan::find($id);
+        if (!$loan) {
+            return response()->json(['message' => 'Préstamo no encontrado'], 404);
         }
 
-        $loan->return_date = now();
-        $loan->save();
-
-        // Cuando devuelce se aumenta el stock
-        $loan->book->incrementarStock();
+        try {
+            $this->service->markAsReturned($loan);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 404);
+        }
 
         return response()->json(['message' => 'Préstamo marcado como devuelto.']);
     }

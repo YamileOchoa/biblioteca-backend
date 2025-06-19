@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\UpdateUserRequest;
+use App\Services\UserService;
 
 /**
  * @OA\Tag(
@@ -14,6 +16,14 @@ use Illuminate\Support\Facades\Auth;
  */
 class UserController extends Controller
 {
+
+    protected $service;
+
+    public function __construct(UserService $service)
+    {
+        $this->service = $service;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/users",
@@ -34,7 +44,7 @@ class UserController extends Controller
         if ($user->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-        return User::all();
+        return $this->service->list();
     }
 
     /**
@@ -64,7 +74,7 @@ class UserController extends Controller
         if ($user->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-        return User::findOrFail($id);
+       return $this->service->find($id);
     }
 
     /**
@@ -96,15 +106,9 @@ class UserController extends Controller
      *     @OA\Response(response=404, description="User not found")
      * )
      */
-    public function update(Request $request, $id)
+    public function update(UpdateUserRequest $request, $id)
     {
-        $user = Auth::user();
-        if ($user->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-        $targetUser = User::findOrFail($id);
-        $targetUser->update($request->all());
-        return $targetUser;
+         return $this->service->update($id, $request->validated());
     }
 
     /**
@@ -130,7 +134,7 @@ class UserController extends Controller
         if ($user->role !== 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-        User::destroy($id);
+        $this->service->delete($id);
         return response()->noContent();
     }
 }

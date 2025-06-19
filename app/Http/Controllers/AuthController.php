@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\AuthService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
+use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\LoginRequest;
 
 /**
  * @OA\Tag(
@@ -38,23 +41,12 @@ class AuthController extends Controller
      *     @OA\Response(response=422, description="Errores de validación")
      * )
      */
-    public function register(Request $request) {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed',
-            'role' => 'in:admin,lector'
-        ]);
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role ?? 'lector',
-        ]);
-
-        return response()->json(['token' => $user->createToken('api')->plainTextToken]);
+    public function register(RegisterRequest $request, AuthService $service)
+    {
+        $token = $service->register($request->validated());
+        return response()->json(['token' => $token]);
     }
+
 
     /**
      * @OA\Post(
@@ -77,14 +69,16 @@ class AuthController extends Controller
      *     @OA\Response(response=401, description="Credenciales inválidas")
      * )
      */
-    public function login(Request $request) {
-        $user = User::where('email', $request->email)->first();
-        if (!$user || !Hash::check($request->password, $user->password)) {
+    public function login(LoginRequest $request, AuthService $service)
+    {
+        $token = $service->login($request->validated());
+
+        if (!$token) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
-        return response()->json(['token' => $user->createToken('api')->plainTextToken]);
-    }
 
+        return response()->json(['token' => $token]);
+    }
     /**
      * @OA\Post(
      *     path="/api/logout",
@@ -98,11 +92,9 @@ class AuthController extends Controller
      *     )
      * )
      */
-    public function logout(Request $request)
+    public function logout(Request $request, AuthService $service)
     {
-        $request->user()->currentAccessToken()->delete();
-        return response()->json([
-            'message' => 'Logout successful'
-        ]);
+        $service->logout($request->user());
+        return response()->json(['message' => 'Logout successful']);
     }
 }

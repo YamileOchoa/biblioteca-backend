@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Book;
 
+/**
+ * @mixin IdeHelperAuthor
+ */
 class Author extends Model
 {
     use HasFactory;

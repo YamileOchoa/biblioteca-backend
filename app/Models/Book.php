@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Author;
 use App\Models\Category;
 
+
+/**
+ * @mixin IdeHelperBook
+ */
 class Book extends Model
 {
 
@@ -38,5 +42,9 @@ class Book extends Model
     {
         $this->stock += 1;
         $this->save();
+    }
+
+    public function favoredBy(){
+        return $this->belongsToMany(\App\Models\User::class, 'favorites');
     }
 }

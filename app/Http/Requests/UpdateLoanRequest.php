@@ -11,7 +11,7 @@ class UpdateLoanRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,12 @@ class UpdateLoanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'user_id' => 'sometimes|exists:users,id',
+            'book_id' => 'sometimes|exists:books,id',
+            'loan_date' => 'sometimes|date',
+            'due_date' => 'sometimes|date',
+            'return_date' => 'sometimes|date',
+            'status' => 'sometimes|string',
         ];
     }
 }

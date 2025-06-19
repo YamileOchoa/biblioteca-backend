@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -8,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 /**
  * @OA\Tag(
  *     name="Users",
- *     description="Operaciones para gestión de usuarios"
+ *     description="Operations for user management"
  * )
  */
 class UserController extends Controller
@@ -16,22 +17,22 @@ class UserController extends Controller
     /**
      * @OA\Get(
      *     path="/api/users",
-     *     summary="Listar todos los usuarios (solo admin)",
+     *     summary="List all users (admin only)",
      *     tags={"Users"},
      *     security={{"sanctum":{}}},
      *     @OA\Response(
      *         response=200,
-     *         description="Lista de usuarios",
+     *         description="List of users",
      *         @OA\JsonContent(type="array", @OA\Items(ref="#/components/schemas/User"))
      *     ),
-     *     @OA\Response(response=403, description="No autorizado")
+     *     @OA\Response(response=403, description="Unauthorized")
      * )
      */
     public function index()
     {
         $user = Auth::user();
         if ($user->role !== 'admin') {
-            return response()->json(['message' => 'No autorizado'], 403);
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
         return User::all();
     }
@@ -39,7 +40,7 @@ class UserController extends Controller
     /**
      * @OA\Get(
      *     path="/api/users/{id}",
-     *     summary="Ver detalles de un usuario (solo admin)",
+     *     summary="View user details (admin only)",
      *     tags={"Users"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
@@ -50,18 +51,18 @@ class UserController extends Controller
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Detalles del usuario",
+     *         description="User details",
      *         @OA\JsonContent(ref="#/components/schemas/User")
      *     ),
-     *     @OA\Response(response=403, description="No autorizado"),
-     *     @OA\Response(response=404, description="Usuario no encontrado")
+     *     @OA\Response(response=403, description="Unauthorized"),
+     *     @OA\Response(response=404, description="User not found")
      * )
      */
     public function show($id)
     {
         $user = Auth::user();
         if ($user->role !== 'admin') {
-            return response()->json(['message' => 'No autorizado'], 403);
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
         return User::findOrFail($id);
     }
@@ -69,7 +70,7 @@ class UserController extends Controller
     /**
      * @OA\Put(
      *     path="/api/users/{id}",
-     *     summary="Actualizar usuario (solo admin)",
+     *     summary="Update a user (admin only)",
      *     tags={"Users"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
@@ -81,35 +82,35 @@ class UserController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             @OA\Property(property="name", type="string", example="Nuevo Nombre"),
-     *             @OA\Property(property="email", type="string", example="nuevo@email.com"),
+     *             @OA\Property(property="name", type="string", example="New Name"),
+     *             @OA\Property(property="email", type="string", example="new@email.com"),
      *             @OA\Property(property="role", type="string", example="admin")
      *         )
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Usuario actualizado",
+     *         description="User updated",
      *         @OA\JsonContent(ref="#/components/schemas/User")
      *     ),
-     *     @OA\Response(response=403, description="No autorizado"),
-     *     @OA\Response(response=404, description="Usuario no encontrado")
+     *     @OA\Response(response=403, description="Unauthorized"),
+     *     @OA\Response(response=404, description="User not found")
      * )
      */
     public function update(Request $request, $id)
     {
         $user = Auth::user();
         if ($user->role !== 'admin') {
-            return response()->json(['message' => 'No autorizado'], 403);
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
-        $usuario = User::findOrFail($id);
-        $usuario->update($request->all());
-        return $usuario;
+        $targetUser = User::findOrFail($id);
+        $targetUser->update($request->all());
+        return $targetUser;
     }
 
     /**
      * @OA\Delete(
      *     path="/api/users/{id}",
-     *     summary="Eliminar usuario (solo admin)",
+     *     summary="Delete a user (admin only)",
      *     tags={"Users"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
@@ -118,19 +119,18 @@ class UserController extends Controller
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
-     *     @OA\Response(response=204, description="Usuario eliminado"),
-     *     @OA\Response(response=403, description="No autorizado"),
-     *     @OA\Response(response=404, description="Usuario no encontrado")
+     *     @OA\Response(response=204, description="User deleted"),
+     *     @OA\Response(response=403, description="Unauthorized"),
+     *     @OA\Response(response=404, description="User not found")
      * )
      */
     public function destroy($id)
     {
         $user = Auth::user();
         if ($user->role !== 'admin') {
-            return response()->json(['message' => 'No autorizado'], 403);
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
         User::destroy($id);
         return response()->noContent();
-
     }
-} 
+}

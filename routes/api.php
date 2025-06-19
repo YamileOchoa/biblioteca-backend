@@ -8,6 +8,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\FavoriteController;
 
 // Rutas públicas
 Route::post('/register', [AuthController::class, 'register']);
@@ -70,6 +71,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/loans/{loan}', [LoanController::class, 'destroy']);
     });
 });
+
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::post('/favorites', [FavoriteController::class, 'store']);
+    Route::delete('/favorites/{book_id}', [FavoriteController::class, 'destroy']);
+});
+
+
 
 Route::middleware(['auth:sanctum', 'is.admin'])->get('/admin-test', function () {
     return response()->json(['ok' => true]);

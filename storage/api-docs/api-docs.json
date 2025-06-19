@@ -896,6 +896,141 @@
                 ]
             }
         },
+        "/api/favorites": {
+            "get": {
+                "tags": [
+                    "Favorite"
+                ],
+                "summary": "List the authenticated user's favorite books",
+                "operationId": "81123175f76259d611e2c337477dfa5f",
+                "responses": {
+                    "200": {
+                        "description": "List of favorite books",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Book"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Favorite"
+                ],
+                "summary": "Add a book to favorites",
+                "operationId": "370ffab0458b21c048b584dc20d059e0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "book_id"
+                                ],
+                                "properties": {
+                                    "book_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Book added to favorites",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Book added to favorites"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "422": {
+                        "description": "Invalid data"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/favorites/{book_id}": {
+            "delete": {
+                "tags": [
+                    "Favorite"
+                ],
+                "summary": "Remove a book from favorites",
+                "operationId": "2525a5999b8971af814aed46a58514d4",
+                "parameters": [
+                    {
+                        "name": "book_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Book removed from favorites",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Book removed from favorites"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "404": {
+                        "description": "Book not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/loans": {
             "get": {
                 "tags": [
@@ -1188,11 +1323,11 @@
                 "tags": [
                     "Users"
                 ],
-                "summary": "Listar todos los usuarios (solo admin)",
+                "summary": "List all users (admin only)",
                 "operationId": "c457726701591d1183b53aa71fc13441",
                 "responses": {
                     "200": {
-                        "description": "Lista de usuarios",
+                        "description": "List of users",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1205,7 +1340,7 @@
                         }
                     },
                     "403": {
-                        "description": "No autorizado"
+                        "description": "Unauthorized"
                     }
                 },
                 "security": [
@@ -1220,7 +1355,7 @@
                 "tags": [
                     "Users"
                 ],
-                "summary": "Ver detalles de un usuario (solo admin)",
+                "summary": "View user details (admin only)",
                 "operationId": "36a33ff774d5cba33c039dec2c3e0287",
                 "parameters": [
                     {
@@ -1234,7 +1369,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Detalles del usuario",
+                        "description": "User details",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1244,10 +1379,10 @@
                         }
                     },
                     "403": {
-                        "description": "No autorizado"
+                        "description": "Unauthorized"
                     },
                     "404": {
-                        "description": "Usuario no encontrado"
+                        "description": "User not found"
                     }
                 },
                 "security": [
@@ -1260,7 +1395,7 @@
                 "tags": [
                     "Users"
                 ],
-                "summary": "Actualizar usuario (solo admin)",
+                "summary": "Update a user (admin only)",
                 "operationId": "b9091397c8b25f12c6adb74be6ce3a5a",
                 "parameters": [
                     {
@@ -1280,11 +1415,11 @@
                                 "properties": {
                                     "name": {
                                         "type": "string",
-                                        "example": "Nuevo Nombre"
+                                        "example": "New Name"
                                     },
                                     "email": {
                                         "type": "string",
-                                        "example": "nuevo@email.com"
+                                        "example": "new@email.com"
                                     },
                                     "role": {
                                         "type": "string",
@@ -1298,7 +1433,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Usuario actualizado",
+                        "description": "User updated",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1308,10 +1443,10 @@
                         }
                     },
                     "403": {
-                        "description": "No autorizado"
+                        "description": "Unauthorized"
                     },
                     "404": {
-                        "description": "Usuario no encontrado"
+                        "description": "User not found"
                     }
                 },
                 "security": [
@@ -1324,7 +1459,7 @@
                 "tags": [
                     "Users"
                 ],
-                "summary": "Eliminar usuario (solo admin)",
+                "summary": "Delete a user (admin only)",
                 "operationId": "fa56cffde745d3f152f95cbacd936c0b",
                 "parameters": [
                     {
@@ -1338,13 +1473,13 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "Usuario eliminado"
+                        "description": "User deleted"
                     },
                     "403": {
-                        "description": "No autorizado"
+                        "description": "Unauthorized"
                     },
                     "404": {
-                        "description": "Usuario no encontrado"
+                        "description": "User not found"
                     }
                 },
                 "security": [
@@ -1568,8 +1703,12 @@
             "description": "Endpoints para registro, login y logout"
         },
         {
+            "name": "Favorite",
+            "description": "Operations to manage users' favorite books"
+        },
+        {
             "name": "Users",
-            "description": "Operaciones para gestión de usuarios"
+            "description": "Operations for user management"
         },
         {
             "name": "Authors",

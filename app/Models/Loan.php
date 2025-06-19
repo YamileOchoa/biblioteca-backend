@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User; 
 use App\Models\Book; 
 
+/**
+ * @mixin IdeHelperLoan
+ */
 class Loan extends Model
 {
     use HasFactory;

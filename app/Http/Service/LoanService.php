@@ -1,10 +1,9 @@
 <?php
 
-namespace App\Services;
+namespace App\Http\Service;
 
 use App\Models\Loan;
 use App\Models\Book;
-use Illuminate\Support\Facades\Auth;
 
 class LoanService
 {

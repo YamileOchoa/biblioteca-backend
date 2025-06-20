@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Services\AuthService;
+use App\Http\Services\AuthService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Service\AuthService as ServiceAuthService;
+use Auth;
 
 /**
  * @OA\Tag(
@@ -41,7 +43,7 @@ class AuthController extends Controller
      *     @OA\Response(response=422, description="Errores de validación")
      * )
      */
-    public function register(RegisterRequest $request, AuthService $service)
+    public function register(RegisterRequest $request, ServiceAuthService $service)
     {
         $token = $service->register($request->validated());
         return response()->json(['token' => $token]);
@@ -69,7 +71,7 @@ class AuthController extends Controller
      *     @OA\Response(response=401, description="Credenciales inválidas")
      * )
      */
-    public function login(LoginRequest $request, AuthService $service)
+    public function login(LoginRequest $request, ServiceAuthService $service)
     {
         $token = $service->login($request->validated());
 
@@ -92,7 +94,7 @@ class AuthController extends Controller
      *     )
      * )
      */
-    public function logout(Request $request, AuthService $service)
+    public function logout(Request $request, ServiceAuthService $service)
     {
         $service->logout($request->user());
         return response()->json(['message' => 'Logout successful']);

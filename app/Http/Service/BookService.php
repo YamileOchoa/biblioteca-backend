@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Http\Service;
 
 use App\Models\Book;
 use Illuminate\Support\Facades\Storage;

@@ -6,7 +6,8 @@ use App\Models\Author;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreAuthorRequest;
 use App\Http\Requests\UpdateAuthorRequest;
-use App\Services\AuthorService;
+use App\Http\Service\AuthorService as ServiceAuthorService;
+use App\Http\Services\AuthorService;
 use Illuminate\Support\Facades\Auth;
 
 class AuthorController extends Controller
@@ -51,7 +52,7 @@ class AuthorController extends Controller
      *     @OA\Response(response=403, description="Unauthorized")
      * )
      */
-    public function store(StoreAuthorRequest $request, AuthorService $service)
+    public function store(StoreAuthorRequest $request, ServiceAuthorService $service)
     {
         $this->authorizeAdmin();
         return $service->create($request->validated());
@@ -112,7 +113,7 @@ class AuthorController extends Controller
      *     @OA\Response(response=404, description="Author not found")
      * )
      */
-    public function update(UpdateAuthorRequest $request, Author $author, AuthorService $service)
+    public function update(UpdateAuthorRequest $request, Author $author, ServiceAuthorService $service)
     {
         $this->authorizeAdmin();
         return $service->update($author, $request->validated());
@@ -136,7 +137,7 @@ class AuthorController extends Controller
      *     @OA\Response(response=404, description="Author not found")
      * )
      */
-    public function destroy(Author $author, AuthorService $service)
+    public function destroy(Author $author, ServiceAuthorService $service)
     {
         $this->authorizeAdmin();
         $service->delete($author);

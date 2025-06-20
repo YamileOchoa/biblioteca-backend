@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Loan;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\StoreLoanRequest;
 use App\Http\Requests\UpdateLoanRequest;
-use App\Services\LoanService;
+use App\Http\Service\LoanService;
 
 /**
  * @OA\Schema(

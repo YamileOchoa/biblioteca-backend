@@ -3,13 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use App\Services\BookService;
 use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
-
+use App\Http\Service\BookService as ServiceBookService;
 
 /**
  * @OA\Schema(
@@ -35,7 +32,7 @@ class BookController extends Controller
 {
     protected $bookService;
 
-    public function __construct(BookService $bookService)
+    public function __construct(ServiceBookService $bookService)
     {
         $this->bookService = $bookService;
     }

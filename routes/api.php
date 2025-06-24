@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\FavoriteController;
+use Illuminate\Http\Request;
 
 // Rutas públicas
 Route::post('/register', [AuthController::class, 'register']);
@@ -20,6 +21,9 @@ Route::get('/books/available', [BookController::class, 'available']);
 // Rutas protegidas por autenticacion Sanctum
 Route::middleware('auth:sanctum')->group(function () {
 
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
 
     // Ruta para que solo el admin pueda administrart los usuarios
     Route::apiResource('users', UserController::class)->except(['store']);
